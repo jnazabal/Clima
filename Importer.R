@@ -1,11 +1,55 @@
-setwd("~/R_exercises/Course 7/Week 3")
-library(tidyverse)
 
-potato <- read_delim("etxarri-aranatz gn_2022.csv", 
-                     delim = ";", 
-                     col_select = contains(c("a","o")),
-                     locale = locale(decimal_mark = ".", encoding = "iso-8859-1")
-                     )
+library(tidyverse)
+library(here)
+here()
+
+files <- list.files(path = here("data"), pattern = ".csv")
+file_names <- substr(files,1,23)
+
+headers <- c(
+  "Fecha" = "Fecha-hora",
+  "Tmax" = "Temperatura máxima ºC",
+  "Tmed" = "Temperatura media ºC",
+  "Tmin" = "Temperatura mínima ºC",
+  "Hmed" = "Humedad relativa med. %",
+  "Hmax" = "Humedad relativa máx. %",
+  "Hmin" = "Humedad relativa mín. %",
+  "Prec" = "Precipitación acumulada l/m²",
+  "Viento_speed" = "Velocidad media viento 10 m m/s",
+  "Viento_dir" = "Dirección viento 10 m (MODA) sector",
+  "Racha_max" = "Velocidad racha máx 10 m m/s",
+  "Racha_dir" = "Dirección racha máx 10 m º",
+  "Rad" = "Radiación global W/m²",
+  "Sun" = "Insolación total s"
+)
+
+try(rename(df, any_of(headers)))
+
+setwd(here("data"))
+
+for(i in file_names){
+  df <- read_delim(paste(i,".csv", sep=""),
+                      delim = ";", 
+                      col_select = contains(c("a","o")),
+                      locale = locale(decimal_mark = ".", encoding = "iso-8859-1")
+                      )
+  for(j in 1:length(headers)){
+      if(try(rename(df, headers[j]))){
+        df <- mutate(df, headers[j])
+      }
+    
+  }
+  
+        
+  df <- mutate(df, 
+         "Fecha-hora" = dmy_hms(`Fecha-hora`), 
+         "Insolación total h" = seconds_to_period(as.numeric(`Insolación total s`)), 
+         "Insolación total s" = NULL
+  )
+  }
+  
+
+
 
 potato2 <- mutate(potato, 
                   "Fecha-hora" = dmy_hms(`Fecha-hora`), 
